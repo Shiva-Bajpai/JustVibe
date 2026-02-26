@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400&amp;display=swap');
+  </style>
+  <!-- Entire logo in Playfair Display italic (same as "Noise.") -->
+  <text x="0" y="30" font-family="'Playfair Display', Georgia, serif" font-size="28" font-weight="400" font-style="italic" fill="white" letter-spacing="-0.5">JustVibe</text>
+</svg>
