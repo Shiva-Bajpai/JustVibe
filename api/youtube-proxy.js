@@ -34,3 +34,12 @@ export default async function handler(req, res) {
         if (!response.ok) {
             return res.status(response.status).json({ error: `YouTube returned status ${response.status}` });
         }
+
+        const html = await response.text();
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(200).send(html);
+    } catch (error) {
+        console.error('YouTube proxy error:', error);
+        return res.status(500).json({ error: 'Failed to fetch from YouTube' });
+    }
+}
