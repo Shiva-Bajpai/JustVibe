@@ -2714,3 +2714,682 @@ define(['exports'], (function (exports) { 'use strict';
        * worker installs.
        *
        * This method can be called multiple times.
+       *
+       * @param {Array<Object|string>} [entries=[]] Array of entries to precache.
+       */
+      precache(entries) {
+        this.addToCacheList(entries);
+        if (!this._installAndActiveListenersAdded) {
+          self.addEventListener('install', this.install);
+          self.addEventListener('activate', this.activate);
+          this._installAndActiveListenersAdded = true;
+        }
+      }
+      /**
+       * This method will add items to the precache list, removing duplicates
+       * and ensuring the information is valid.
+       *
+       * @param {Array<workbox-precaching.PrecacheController.PrecacheEntry|string>} entries
+       *     Array of entries to precache.
+       */
+      addToCacheList(entries) {
+        {
+          finalAssertExports.isArray(entries, {
+            moduleName: 'workbox-precaching',
+            className: 'PrecacheController',
+            funcName: 'addToCacheList',
+            paramName: 'entries'
+          });
+        }
+        const urlsToWarnAbout = [];
+        for (const entry of entries) {
+          // See https://github.com/GoogleChrome/workbox/issues/2259
+          if (typeof entry === 'string') {
+            urlsToWarnAbout.push(entry);
+          } else if (entry && entry.revision === undefined) {
+            urlsToWarnAbout.push(entry.url);
+          }
+          const {
+            cacheKey,
+            url
+          } = createCacheKey(entry);
+          const cacheMode = typeof entry !== 'string' && entry.revision ? 'reload' : 'default';
+          if (this._urlsToCacheKeys.has(url) && this._urlsToCacheKeys.get(url) !== cacheKey) {
+            throw new WorkboxError('add-to-cache-list-conflicting-entries', {
+              firstEntry: this._urlsToCacheKeys.get(url),
+              secondEntry: cacheKey
+            });
+          }
+          if (typeof entry !== 'string' && entry.integrity) {
+            if (this._cacheKeysToIntegrities.has(cacheKey) && this._cacheKeysToIntegrities.get(cacheKey) !== entry.integrity) {
+              throw new WorkboxError('add-to-cache-list-conflicting-integrities', {
+                url
+              });
+            }
+            this._cacheKeysToIntegrities.set(cacheKey, entry.integrity);
+          }
+          this._urlsToCacheKeys.set(url, cacheKey);
+          this._urlsToCacheModes.set(url, cacheMode);
+          if (urlsToWarnAbout.length > 0) {
+            const warningMessage = `Workbox is precaching URLs without revision ` + `info: ${urlsToWarnAbout.join(', ')}\nThis is generally NOT safe. ` + `Learn more at https://bit.ly/wb-precache`;
+            {
+              logger.warn(warningMessage);
+            }
+          }
+        }
+      }
+      /**
+       * Precaches new and updated assets. Call this method from the service worker
+       * install event.
+       *
+       * Note: this method calls `event.waitUntil()` for you, so you do not need
+       * to call it yourself in your event handlers.
+       *
+       * @param {ExtendableEvent} event
+       * @return {Promise<workbox-precaching.InstallResult>}
+       */
+      install(event) {
+        // waitUntil returns Promise<any>
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return waitUntil(event, async () => {
+          const installReportPlugin = new PrecacheInstallReportPlugin();
+          this.strategy.plugins.push(installReportPlugin);
+          // Cache entries one at a time.
+          // See https://github.com/GoogleChrome/workbox/issues/2528
+          for (const [url, cacheKey] of this._urlsToCacheKeys) {
+            const integrity = this._cacheKeysToIntegrities.get(cacheKey);
+            const cacheMode = this._urlsToCacheModes.get(url);
+            const request = new Request(url, {
+              integrity,
+              cache: cacheMode,
+              credentials: 'same-origin'
+            });
+            await Promise.all(this.strategy.handleAll({
+              params: {
+                cacheKey
+              },
+              request,
+              event
+            }));
+          }
+          const {
+            updatedURLs,
+            notUpdatedURLs
+          } = installReportPlugin;
+          {
+            printInstallDetails(updatedURLs, notUpdatedURLs);
+          }
+          return {
+            updatedURLs,
+            notUpdatedURLs
+          };
+        });
+      }
+      /**
+       * Deletes assets that are no longer present in the current precache manifest.
+       * Call this method from the service worker activate event.
+       *
+       * Note: this method calls `event.waitUntil()` for you, so you do not need
+       * to call it yourself in your event handlers.
+       *
+       * @param {ExtendableEvent} event
+       * @return {Promise<workbox-precaching.CleanupResult>}
+       */
+      activate(event) {
+        // waitUntil returns Promise<any>
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return waitUntil(event, async () => {
+          const cache = await self.caches.open(this.strategy.cacheName);
+          const currentlyCachedRequests = await cache.keys();
+          const expectedCacheKeys = new Set(this._urlsToCacheKeys.values());
+          const deletedURLs = [];
+          for (const request of currentlyCachedRequests) {
+            if (!expectedCacheKeys.has(request.url)) {
+              await cache.delete(request);
+              deletedURLs.push(request.url);
+            }
+          }
+          {
+            printCleanupDetails(deletedURLs);
+          }
+          return {
+            deletedURLs
+          };
+        });
+      }
+      /**
+       * Returns a mapping of a precached URL to the corresponding cache key, taking
+       * into account the revision information for the URL.
+       *
+       * @return {Map<string, string>} A URL to cache key mapping.
+       */
+      getURLsToCacheKeys() {
+        return this._urlsToCacheKeys;
+      }
+      /**
+       * Returns a list of all the URLs that have been precached by the current
+       * service worker.
+       *
+       * @return {Array<string>} The precached URLs.
+       */
+      getCachedURLs() {
+        return [...this._urlsToCacheKeys.keys()];
+      }
+      /**
+       * Returns the cache key used for storing a given URL. If that URL is
+       * unversioned, like `/index.html', then the cache key will be the original
+       * URL with a search parameter appended to it.
+       *
+       * @param {string} url A URL whose cache key you want to look up.
+       * @return {string} The versioned URL that corresponds to a cache key
+       * for the original URL, or undefined if that URL isn't precached.
+       */
+      getCacheKeyForURL(url) {
+        const urlObject = new URL(url, location.href);
+        return this._urlsToCacheKeys.get(urlObject.href);
+      }
+      /**
+       * @param {string} url A cache key whose SRI you want to look up.
+       * @return {string} The subresource integrity associated with the cache key,
+       * or undefined if it's not set.
+       */
+      getIntegrityForCacheKey(cacheKey) {
+        return this._cacheKeysToIntegrities.get(cacheKey);
+      }
+      /**
+       * This acts as a drop-in replacement for
+       * [`cache.match()`](https://developer.mozilla.org/en-US/docs/Web/API/Cache/match)
+       * with the following differences:
+       *
+       * - It knows what the name of the precache is, and only checks in that cache.
+       * - It allows you to pass in an "original" URL without versioning parameters,
+       * and it will automatically look up the correct cache key for the currently
+       * active revision of that URL.
+       *
+       * E.g., `matchPrecache('index.html')` will find the correct precached
+       * response for the currently active service worker, even if the actual cache
+       * key is `'/index.html?__WB_REVISION__=1234abcd'`.
+       *
+       * @param {string|Request} request The key (without revisioning parameters)
+       * to look up in the precache.
+       * @return {Promise<Response|undefined>}
+       */
+      async matchPrecache(request) {
+        const url = request instanceof Request ? request.url : request;
+        const cacheKey = this.getCacheKeyForURL(url);
+        if (cacheKey) {
+          const cache = await self.caches.open(this.strategy.cacheName);
+          return cache.match(cacheKey);
+        }
+        return undefined;
+      }
+      /**
+       * Returns a function that looks up `url` in the precache (taking into
+       * account revision information), and returns the corresponding `Response`.
+       *
+       * @param {string} url The precached URL which will be used to lookup the
+       * `Response`.
+       * @return {workbox-routing~handlerCallback}
+       */
+      createHandlerBoundToURL(url) {
+        const cacheKey = this.getCacheKeyForURL(url);
+        if (!cacheKey) {
+          throw new WorkboxError('non-precached-url', {
+            url
+          });
+        }
+        return options => {
+          options.request = new Request(url);
+          options.params = Object.assign({
+            cacheKey
+          }, options.params);
+          return this.strategy.handle(options);
+        };
+      }
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    let precacheController;
+    /**
+     * @return {PrecacheController}
+     * @private
+     */
+    const getOrCreatePrecacheController = () => {
+      if (!precacheController) {
+        precacheController = new PrecacheController();
+      }
+      return precacheController;
+    };
+
+    /*
+      Copyright 2018 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Removes any URL search parameters that should be ignored.
+     *
+     * @param {URL} urlObject The original URL.
+     * @param {Array<RegExp>} ignoreURLParametersMatching RegExps to test against
+     * each search parameter name. Matches mean that the search parameter should be
+     * ignored.
+     * @return {URL} The URL with any ignored search parameters removed.
+     *
+     * @private
+     * @memberof workbox-precaching
+     */
+    function removeIgnoredSearchParams(urlObject, ignoreURLParametersMatching = []) {
+      // Convert the iterable into an array at the start of the loop to make sure
+      // deletion doesn't mess up iteration.
+      for (const paramName of [...urlObject.searchParams.keys()]) {
+        if (ignoreURLParametersMatching.some(regExp => regExp.test(paramName))) {
+          urlObject.searchParams.delete(paramName);
+        }
+      }
+      return urlObject;
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Generator function that yields possible variations on the original URL to
+     * check, one at a time.
+     *
+     * @param {string} url
+     * @param {Object} options
+     *
+     * @private
+     * @memberof workbox-precaching
+     */
+    function* generateURLVariations(url, {
+      ignoreURLParametersMatching = [/^utm_/, /^fbclid$/],
+      directoryIndex = 'index.html',
+      cleanURLs = true,
+      urlManipulation
+    } = {}) {
+      const urlObject = new URL(url, location.href);
+      urlObject.hash = '';
+      yield urlObject.href;
+      const urlWithoutIgnoredParams = removeIgnoredSearchParams(urlObject, ignoreURLParametersMatching);
+      yield urlWithoutIgnoredParams.href;
+      if (directoryIndex && urlWithoutIgnoredParams.pathname.endsWith('/')) {
+        const directoryURL = new URL(urlWithoutIgnoredParams.href);
+        directoryURL.pathname += directoryIndex;
+        yield directoryURL.href;
+      }
+      if (cleanURLs) {
+        const cleanURL = new URL(urlWithoutIgnoredParams.href);
+        cleanURL.pathname += '.html';
+        yield cleanURL.href;
+      }
+      if (urlManipulation) {
+        const additionalURLs = urlManipulation({
+          url: urlObject
+        });
+        for (const urlToAttempt of additionalURLs) {
+          yield urlToAttempt.href;
+        }
+      }
+    }
+
+    /*
+      Copyright 2020 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * A subclass of {@link workbox-routing.Route} that takes a
+     * {@link workbox-precaching.PrecacheController}
+     * instance and uses it to match incoming requests and handle fetching
+     * responses from the precache.
+     *
+     * @memberof workbox-precaching
+     * @extends workbox-routing.Route
+     */
+    class PrecacheRoute extends Route {
+      /**
+       * @param {PrecacheController} precacheController A `PrecacheController`
+       * instance used to both match requests and respond to fetch events.
+       * @param {Object} [options] Options to control how requests are matched
+       * against the list of precached URLs.
+       * @param {string} [options.directoryIndex=index.html] The `directoryIndex` will
+       * check cache entries for a URLs ending with '/' to see if there is a hit when
+       * appending the `directoryIndex` value.
+       * @param {Array<RegExp>} [options.ignoreURLParametersMatching=[/^utm_/, /^fbclid$/]] An
+       * array of regex's to remove search params when looking for a cache match.
+       * @param {boolean} [options.cleanURLs=true] The `cleanURLs` option will
+       * check the cache for the URL with a `.html` added to the end of the end.
+       * @param {workbox-precaching~urlManipulation} [options.urlManipulation]
+       * This is a function that should take a URL and return an array of
+       * alternative URLs that should be checked for precache matches.
+       */
+      constructor(precacheController, options) {
+        const match = ({
+          request
+        }) => {
+          const urlsToCacheKeys = precacheController.getURLsToCacheKeys();
+          for (const possibleURL of generateURLVariations(request.url, options)) {
+            const cacheKey = urlsToCacheKeys.get(possibleURL);
+            if (cacheKey) {
+              const integrity = precacheController.getIntegrityForCacheKey(cacheKey);
+              return {
+                cacheKey,
+                integrity
+              };
+            }
+          }
+          {
+            logger.debug(`Precaching did not find a match for ` + getFriendlyURL(request.url));
+          }
+          return;
+        };
+        super(match, precacheController.strategy);
+      }
+    }
+
+    /*
+      Copyright 2019 Google LLC
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Add a `fetch` listener to the service worker that will
+     * respond to
+     * [network requests]{@link https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers#Custom_responses_to_requests}
+     * with precached assets.
+     *
+     * Requests for assets that aren't precached, the `FetchEvent` will not be
+     * responded to, allowing the event to fall through to other `fetch` event
+     * listeners.
+     *
+     * @param {Object} [options] See the {@link workbox-precaching.PrecacheRoute}
+     * options.
+     *
+     * @memberof workbox-precaching
+     */
+    function addRoute(options) {
+      const precacheController = getOrCreatePrecacheController();
+      const precacheRoute = new PrecacheRoute(precacheController, options);
+      registerRoute(precacheRoute);
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Adds items to the precache list, removing any duplicates and
+     * stores the files in the
+     * {@link workbox-core.cacheNames|"precache cache"} when the service
+     * worker installs.
+     *
+     * This method can be called multiple times.
+     *
+     * Please note: This method **will not** serve any of the cached files for you.
+     * It only precaches files. To respond to a network request you call
+     * {@link workbox-precaching.addRoute}.
+     *
+     * If you have a single array of files to precache, you can just call
+     * {@link workbox-precaching.precacheAndRoute}.
+     *
+     * @param {Array<Object|string>} [entries=[]] Array of entries to precache.
+     *
+     * @memberof workbox-precaching
+     */
+    function precache(entries) {
+      const precacheController = getOrCreatePrecacheController();
+      precacheController.precache(entries);
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * This method will add entries to the precache list and add a route to
+     * respond to fetch events.
+     *
+     * This is a convenience method that will call
+     * {@link workbox-precaching.precache} and
+     * {@link workbox-precaching.addRoute} in a single call.
+     *
+     * @param {Array<Object|string>} entries Array of entries to precache.
+     * @param {Object} [options] See the
+     * {@link workbox-precaching.PrecacheRoute} options.
+     *
+     * @memberof workbox-precaching
+     */
+    function precacheAndRoute(entries, options) {
+      precache(entries);
+      addRoute(options);
+    }
+
+    /*
+      Copyright 2018 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    const SUBSTRING_TO_FIND = '-precache-';
+    /**
+     * Cleans up incompatible precaches that were created by older versions of
+     * Workbox, by a service worker registered under the current scope.
+     *
+     * This is meant to be called as part of the `activate` event.
+     *
+     * This should be safe to use as long as you don't include `substringToFind`
+     * (defaulting to `-precache-`) in your non-precache cache names.
+     *
+     * @param {string} currentPrecacheName The cache name currently in use for
+     * precaching. This cache won't be deleted.
+     * @param {string} [substringToFind='-precache-'] Cache names which include this
+     * substring will be deleted (excluding `currentPrecacheName`).
+     * @return {Array<string>} A list of all the cache names that were deleted.
+     *
+     * @private
+     * @memberof workbox-precaching
+     */
+    const deleteOutdatedCaches = async (currentPrecacheName, substringToFind = SUBSTRING_TO_FIND) => {
+      const cacheNames = await self.caches.keys();
+      const cacheNamesToDelete = cacheNames.filter(cacheName => {
+        return cacheName.includes(substringToFind) && cacheName.includes(self.registration.scope) && cacheName !== currentPrecacheName;
+      });
+      await Promise.all(cacheNamesToDelete.map(cacheName => self.caches.delete(cacheName)));
+      return cacheNamesToDelete;
+    };
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Adds an `activate` event listener which will clean up incompatible
+     * precaches that were created by older versions of Workbox.
+     *
+     * @memberof workbox-precaching
+     */
+    function cleanupOutdatedCaches() {
+      // See https://github.com/Microsoft/TypeScript/issues/28357#issuecomment-436484705
+      self.addEventListener('activate', event => {
+        const cacheName = cacheNames.getPrecacheName();
+        event.waitUntil(deleteOutdatedCaches(cacheName).then(cachesDeleted => {
+          {
+            if (cachesDeleted.length > 0) {
+              logger.log(`The following out-of-date precaches were cleaned up ` + `automatically:`, cachesDeleted);
+            }
+          }
+        }));
+      });
+    }
+
+    /*
+      Copyright 2018 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * NavigationRoute makes it easy to create a
+     * {@link workbox-routing.Route} that matches for browser
+     * [navigation requests]{@link https://developers.google.com/web/fundamentals/primers/service-workers/high-performance-loading#first_what_are_navigation_requests}.
+     *
+     * It will only match incoming Requests whose
+     * {@link https://fetch.spec.whatwg.org/#concept-request-mode|mode}
+     * is set to `navigate`.
+     *
+     * You can optionally only apply this route to a subset of navigation requests
+     * by using one or both of the `denylist` and `allowlist` parameters.
+     *
+     * @memberof workbox-routing
+     * @extends workbox-routing.Route
+     */
+    class NavigationRoute extends Route {
+      /**
+       * If both `denylist` and `allowlist` are provided, the `denylist` will
+       * take precedence and the request will not match this route.
+       *
+       * The regular expressions in `allowlist` and `denylist`
+       * are matched against the concatenated
+       * [`pathname`]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname}
+       * and [`search`]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/search}
+       * portions of the requested URL.
+       *
+       * *Note*: These RegExps may be evaluated against every destination URL during
+       * a navigation. Avoid using
+       * [complex RegExps](https://github.com/GoogleChrome/workbox/issues/3077),
+       * or else your users may see delays when navigating your site.
+       *
+       * @param {workbox-routing~handlerCallback} handler A callback
+       * function that returns a Promise resulting in a Response.
+       * @param {Object} options
+       * @param {Array<RegExp>} [options.denylist] If any of these patterns match,
+       * the route will not handle the request (even if a allowlist RegExp matches).
+       * @param {Array<RegExp>} [options.allowlist=[/./]] If any of these patterns
+       * match the URL's pathname and search parameter, the route will handle the
+       * request (assuming the denylist doesn't match).
+       */
+      constructor(handler, {
+        allowlist = [/./],
+        denylist = []
+      } = {}) {
+        {
+          finalAssertExports.isArrayOfClass(allowlist, RegExp, {
+            moduleName: 'workbox-routing',
+            className: 'NavigationRoute',
+            funcName: 'constructor',
+            paramName: 'options.allowlist'
+          });
+          finalAssertExports.isArrayOfClass(denylist, RegExp, {
+            moduleName: 'workbox-routing',
+            className: 'NavigationRoute',
+            funcName: 'constructor',
+            paramName: 'options.denylist'
+          });
+        }
+        super(options => this._match(options), handler);
+        this._allowlist = allowlist;
+        this._denylist = denylist;
+      }
+      /**
+       * Routes match handler.
+       *
+       * @param {Object} options
+       * @param {URL} options.url
+       * @param {Request} options.request
+       * @return {boolean}
+       *
+       * @private
+       */
+      _match({
+        url,
+        request
+      }) {
+        if (request && request.mode !== 'navigate') {
+          return false;
+        }
+        const pathnameAndSearch = url.pathname + url.search;
+        for (const regExp of this._denylist) {
+          if (regExp.test(pathnameAndSearch)) {
+            {
+              logger.log(`The navigation route ${pathnameAndSearch} is not ` + `being used, since the URL matches this denylist pattern: ` + `${regExp.toString()}`);
+            }
+            return false;
+          }
+        }
+        if (this._allowlist.some(regExp => regExp.test(pathnameAndSearch))) {
+          {
+            logger.debug(`The navigation route ${pathnameAndSearch} ` + `is being used.`);
+          }
+          return true;
+        }
+        {
+          logger.log(`The navigation route ${pathnameAndSearch} is not ` + `being used, since the URL being navigated to doesn't ` + `match the allowlist.`);
+        }
+        return false;
+      }
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Helper function that calls
+     * {@link PrecacheController#createHandlerBoundToURL} on the default
+     * {@link PrecacheController} instance.
+     *
+     * If you are creating your own {@link PrecacheController}, then call the
+     * {@link PrecacheController#createHandlerBoundToURL} on that instance,
+     * instead of using this function.
+     *
+     * @param {string} url The precached URL which will be used to lookup the
+     * `Response`.
+     * @param {boolean} [fallbackToNetwork=true] Whether to attempt to get the
+     * response from the network if there's a precache miss.
+     * @return {workbox-routing~handlerCallback}
+     *
+     * @memberof workbox-precaching
+     */
+    function createHandlerBoundToURL(url) {
+      const precacheController = getOrCreatePrecacheController();
+      return precacheController.createHandlerBoundToURL(url);
+    }
+
+    exports.NavigationRoute = NavigationRoute;
+    exports.cleanupOutdatedCaches = cleanupOutdatedCaches;
+    exports.clientsClaim = clientsClaim;
+    exports.createHandlerBoundToURL = createHandlerBoundToURL;
+    exports.precacheAndRoute = precacheAndRoute;
+    exports.registerRoute = registerRoute;
+
+}));
