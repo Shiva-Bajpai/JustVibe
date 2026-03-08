@@ -1,0 +1,604 @@
+/* ═══════════════════════════════════════════════
+   JUSTVIBE — Premium Design System
+   ═══════════════════════════════════════════════ */
+
+/* ---------- CSS Variables ---------- */
+:root {
+  --glass-bg: rgba(15, 15, 20, 0.6);
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-blur: 25px;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #6366f1;
+  --accent-gradient: linear-gradient(135deg, #8b5cf6, #6366f1, #3b82f6);
+  --accent-glow: rgba(139, 92, 246, 0.3);
+
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.35);
+
+  --font-serif: 'Playfair Display', 'Georgia', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  background: #0a0a0f;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+}
+
+input {
+  border: none;
+  outline: none;
+  font-family: inherit;
+}
+
+
+/* ═══════════════════════════════════════════════
+   LANDING PAGE — SILQUE-inspired
+   ═══════════════════════════════════════════════ */
+
+.landing-page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.landing-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/BG.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  z-index: 0;
+  animation: bgZoom 40s ease-in-out infinite alternate;
+}
+
+@keyframes bgZoom {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.06);
+  }
+}
+
+/* Very light overlay — let the image breathe */
+.landing-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.06) 0%,
+      rgba(0, 0, 0, 0.0) 25%,
+      rgba(0, 0, 0, 0.0) 50%,
+      rgba(0, 0, 0, 0.25) 100%);
+  z-index: 1;
+}
+
+/* Brand mark — top left like SILQUE */
+.landing-brand {
+  position: absolute;
+  top: 26px;
+  left: 32px;
+  z-index: 10;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+
+.landing-brand-logo {
+  height: 38px;
+  width: auto;
+}
+
+/* Container for Pro Button and Modal on Landing Page */
+.landing-pro-container {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Premium Pro Button */
+.landing-pro-btn {
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  /* Liquid glass */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.landing-pro-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.pro-sparkle {
+  color: #eab308;
+  /* Premium gold */
+  font-size: 14px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.6));
+  animation: pulse-sparkle 2s infinite ease-in-out;
+}
+
+@keyframes pulse-sparkle {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.2) rotate(15deg);
+    opacity: 1;
+  }
+}
+
+.pro-modal-wrapper {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  padding-top: 12px;
+  width: 340px;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  visibility: hidden;
+}
+
+.pro-container:hover .pro-modal-wrapper,
+.landing-pro-container:hover .pro-modal-wrapper {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+}
+
+.pro-modal {
+  background: rgba(8, 8, 12, 0.82);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid rgba(234, 179, 8, 0.15);
+  border-radius: 22px;
+  padding: 28px 26px;
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.6),
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 60px rgba(234, 179, 8, 0.06);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  animation: modalBorderPulse 4s ease-in-out infinite;
+}
+
+@keyframes modalBorderPulse {
+
+  0%,
+  100% {
+    border-color: rgba(234, 179, 8, 0.12);
+  }
+
+  50% {
+    border-color: rgba(234, 179, 8, 0.28);
+  }
+}
+
+.pro-modal-glow {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 160px;
+  background: radial-gradient(ellipse, rgba(234, 179, 8, 0.22) 0%, rgba(202, 138, 4, 0.08) 40%, transparent 70%);
+  pointer-events: none;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+/* Inner glow for modal */
+.pro-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.18) 0%, rgba(202, 138, 4, 0.05) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Subtle bottom accent line */
+.pro-modal::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.2), transparent);
+  pointer-events: none;
+}
+
+.pro-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.pro-modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(234, 179, 8, 0.05));
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #eab308;
+  margin-bottom: 6px;
+}
+
+.pro-modal-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 20%, #eab308 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.pro-modal-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  font-weight: 300;
+}
+
+.pro-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pro-feature {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s ease;
+}
+
+.pro-feature:hover {
+  transform: translateX(4px);
+}
+
+.pro-feature-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(234, 179, 8, 0.05));
+  border: 1px solid rgba(234, 179, 8, 0.12);
+  color: #eab308;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
+}
+
+.pro-feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pro-feature-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 0.1px;
+}
+
+.pro-feature-sub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 300;
+}
+
+.pro-cta {
+  width: 100%;
+  padding: 15px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eab308 0%, #d4a00a 50%, #ca8a04 100%);
+  color: #000;
+  font-weight: 700;
+  font-size: 13.5px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow:
+    0 4px 20px rgba(234, 179, 8, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.pro-cta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: shine 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+
+  25% {
+    left: 200%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+.pro-cta:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 8px 32px rgba(234, 179, 8, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ── Content ── */
+.landing-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  margin-top: -6vh;
+}
+
+/* Editorial serif title — like SILQUE's "Be part of the first drop" */
+.landing-title {
+  font-family: var(--font-serif);
+  color: #fff;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.title-top {
+  font-size: clamp(22px, 3.2vw, 38px);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.title-bottom {
+  font-size: clamp(50px, 9vw, 110px);
+  font-weight: 400;
+  letter-spacing: -1.5px;
+  display: block;
+}
+
+.title-bottom em {
+  font-style: italic;
+}
+
+/* Subtitle — light, breathable */
+.landing-subtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(12px, 1.4vw, 14px);
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+  max-width: 440px;
+  letter-spacing: 0.15px;
+  margin-bottom: 32px;
+}
+
+/* CTA — clean rectangular button like SILQUE's "Join Waitlist!" */
+.landing-cta {
+  padding: 13px 34px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-cta:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+.landing-hint {
+  margin-top: 18px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.25);
+  font-weight: 300;
+  letter-spacing: 0.4px;
+}
+
+/* ── Giant Watermark — SILQUE-style outlined text ──
+   Uses -webkit-text-stroke for a frosted glass outline look.
+   The text is transparent fill + white stroke = outlined effect */
+.landing-watermark {
+  position: absolute;
+  bottom: -1%;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  font-family: var(--font-serif);
+  font-size: clamp(100px, 22vw, 300px);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -2px;
+  /* Aurora shimmer gradient */
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(180, 200, 255, 0.12) 20%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(200, 180, 255, 0.12) 80%,
+      rgba(255, 255, 255, 0.08) 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Combined: shimmer sweep + breathing scale + gentle float */
+  animation:
+    auroraShimmer 20s ease-in-out infinite,
+    watermarkBreathe 12s ease-in-out infinite,
+    watermarkFloat 16s ease-in-out infinite;
+  text-shadow: none;
+  filter: drop-shadow(0 0 50px rgba(180, 200, 255, 0.06));
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+  text-transform: none;
+  line-height: 0.8;
+  text-align: center;
+  transform-origin: center bottom;
+}
+
+/* Aurora color-shifting shimmer */
+@keyframes auroraShimmer {
+  0% {
+    background-position: 300% center;
+  }
+
+  100% {
+    background-position: -300% center;
+  }
+}
+
+/* Subtle breathing scale */
+@keyframes watermarkBreathe {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02) translateY(0);
+  }

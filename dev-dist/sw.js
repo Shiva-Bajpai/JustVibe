@@ -88,3 +88,5 @@ define(['./workbox-5a5d9309'], (function (workbox) { 'use strict';
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
+
+}));
