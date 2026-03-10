@@ -40,3 +40,31 @@ function App() {
   }, [showDashboard]);
 
   return (
+    <AppStateProvider>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'rgba(20, 20, 25, 0.9)',
+            color: '#fff',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontFamily: "'Inter', sans-serif",
+          },
+        }}
+      />
+      <AnimatePresence mode="wait">
+        {!showDashboard ? (
+          <LandingPage key="landing" onEnter={handleEnter} />
+        ) : (
+          <Dashboard key="dashboard" onBack={handleBack} />
+        )}
+      </AnimatePresence>
+    </AppStateProvider>
+  );
+}
+
+export default App;
