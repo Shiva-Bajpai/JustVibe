@@ -130,3 +130,38 @@ export function getThumbnailUrl(videoId, quality = 'mqdefault') {
   return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
 }
 
+export async function searchYouTube(query) {
+  try {
+    const html = await fetchYouTubeHTML('search', query);
+
+    const jsonMatch = html.match(/var ytInitialData = ({.*});<\/script>/);
+    if (!jsonMatch || !jsonMatch[1]) {
+      throw new Error('ytInitialData not found in search HTML');
+    }
+
+    const data = JSON.parse(jsonMatch[1]);
+
+    const contents = data.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents;
+    if (!contents) throw new Error('Search contents not found');
+
+    const itemSection = contents.find(c => c.itemSectionRenderer)?.itemSectionRenderer?.contents;
+    if (!itemSection) throw new Error('Video results not found');
+
+    for (const item of itemSection) {
+      const video = item.videoRenderer;
+      if (video && video.videoId) {
+        return {
+          id: video.videoId,
+          title: video.title?.runs?.[0]?.text || `Video ${video.videoId}`,
+          thumbnail: `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`,
+          addedAt: Date.now()
+        };
+      }
+    }
+
+    return { error: 'No videos found for that search query.' };
+  } catch (error) {
+    console.error('Search error:', error);
+    return { error: 'Failed to search YouTube. Try pasting a direct link instead.' };
+  }
+}
