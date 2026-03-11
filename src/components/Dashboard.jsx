@@ -414,3 +414,108 @@ export default function Dashboard({ onBack }) {
                                 onClick={() => setSearchMode('youtube')}
                             >
                                 Search YT
+                            </button>
+                            <button
+                                className={`search-pill ${searchMode === 'queue' ? 'active' : ''}`}
+                                onClick={() => setSearchMode('queue')}
+                            >
+                                Search Queue
+                            </button>
+                        </div>
+                        <div className="url-input-row">
+                            <input
+                                type="text"
+                                className="dash-url-input"
+                                placeholder={searchMode === 'queue' ? "Search your queue..." : "Paste YouTube URL or search..."}
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                disabled={loading}
+                            />
+                            {searchMode === 'youtube' && (
+                                <motion.button
+                                    className="dash-add-btn"
+                                    onClick={handleAdd}
+                                    disabled={loading}
+                                    whileHover={{ scale: 1.08 }}
+                                    whileTap={{ scale: 0.92 }}
+                                >
+                                    {loading ? <span className="mini-spin" /> : '+'}
+                                </motion.button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* URL Helper */}
+                    {searchMode === 'youtube' && (
+                        <span className="url-helper">
+                            Drop any song or playlist you wanna listen ad free, always.
+                        </span>
+                    )}
+                </div>
+
+                {/* ── Queue Section ── */}
+                <div className="dash-queue-section">
+                    <button className="queue-toggle" onClick={() => setShowQueue(!showQueue)}>
+                        <span>Queue ({String(state.playlist.length).padStart(2, '0')})</span>
+                        <svg
+                            width="14" height="14"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                            strokeLinecap="round" strokeLinejoin="round"
+                            style={{ transform: showQueue ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}
+                        >
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </button>
+
+                    <AnimatePresence>
+                        {showQueue && (
+                            <motion.div
+                                className="queue-list"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.35 }}
+                            >
+                                {state.playlist.length === 0 ? (
+                                    <div className="queue-empty">
+                                        <span>Your queue is empty. Add a song above to start vibing.</span>
+                                    </div>
+                                ) : (
+                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                        <SortableContext items={items} strategy={verticalListSortingStrategy}>
+                                            <AnimatePresence mode="popLayout">
+                                                {state.playlist
+                                                    .map((track, originalIndex) => ({ track, originalIndex }))
+                                                    .filter(({ track }) => searchMode === 'queue' && url.trim() ? track.title.toLowerCase().includes(url.toLowerCase()) : true)
+                                                    .map(({ track, originalIndex }) => (
+                                                        <SortableQueueItem
+                                                            key={track.id + '-' + originalIndex}
+                                                            track={track}
+                                                            index={originalIndex}
+                                                            currentIndex={state.currentIndex}
+                                                            onPlay={(i) => dispatch({ type: 'SET_INDEX', payload: i })}
+                                                            onDelete={(i) => dispatch({ type: 'REMOVE_TRACK', payload: i })}
+                                                        />
+                                                    ))}
+                                            </AnimatePresence>
+                                        </SortableContext>
+                                    </DndContext>
+                                )}
+                                {state.playlist.length > 0 && (
+                                    <button className="queue-clear" onClick={() => dispatch({ type: 'CLEAR_ALL' })}>
+                                        Clear All
+                                    </button>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            {videoTrack && (
+                <VideoModal track={videoTrack} onClose={() => setVideoTrack(null)} />
+            )}
+        </motion.div>
+    );
+}
