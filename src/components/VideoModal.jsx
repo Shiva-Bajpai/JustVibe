@@ -34,3 +34,14 @@ export default function VideoModal({ track, onClose }) {
                         <iframe
                             src={`https://www.youtube.com/embed/${track.id}?autoplay=1&rel=0&modestbranding=1`}
                             title={track.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="video-iframe"
+                        />
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
