@@ -122,3 +122,36 @@ export default function PlaylistView({ onVideoToggle }) {
                     <div className="empty-icon">🎵</div>
                     <h3>Your queue is empty</h3>
                     <p>Paste a YouTube URL above to start vibing</p>
+                </motion.div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="playlist-view">
+            <div className="playlist-header">
+                <span className="playlist-count">{state.playlist.length} track{state.playlist.length !== 1 ? 's' : ''}</span>
+                <button className="clear-all-btn" onClick={() => dispatch({ type: 'CLEAR_ALL' })}>
+                    Clear All
+                </button>
+            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={items} strategy={verticalListSortingStrategy}>
+                    <AnimatePresence mode="popLayout">
+                        {state.playlist.map((track, index) => (
+                            <SortableTrackItem
+                                key={track.id + '-' + index}
+                                track={track}
+                                index={index}
+                                currentIndex={state.currentIndex}
+                                onPlay={handlePlay}
+                                onDelete={handleDelete}
+                                onVideoToggle={onVideoToggle}
+                            />
+                        ))}
+                    </AnimatePresence>
+                </SortableContext>
+            </DndContext>
+        </div>
+    );
+}
