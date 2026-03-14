@@ -114,3 +114,34 @@ export default function LandingPage({ onEnter }) {
                 <motion.button
                     className="landing-cta"
                     onClick={handleEnter}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 1.2 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                >
+                    Start Listening
+                </motion.button>
+            </motion.div>
+
+            {/* Giant outlined watermark text — SILQUE-style */}
+            <motion.div
+                className="landing-watermark"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: exiting ? 0 : 1, y: 0 }}
+                transition={{ duration: 1.5, delay: 0.6 }}
+            >
+                justvibe
+            </motion.div>
+
+            <motion.footer
+                className="landing-footer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: exiting ? 0 : 0.8 }}
+                transition={{ duration: 1, delay: 2 }}
+            >
+                nothing else :) 
+            </motion.footer>
+        </motion.div>
+    );
+}
