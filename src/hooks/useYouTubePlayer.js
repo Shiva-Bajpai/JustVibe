@@ -182,3 +182,51 @@ export function useYouTubePlayer() {
     }, [state.loopMode]);
 
     const play = useCallback(() => dispatch({ type: 'SET_PLAYING', payload: true }), [dispatch]);
+    const pause = useCallback(() => dispatch({ type: 'SET_PLAYING', payload: false }), [dispatch]);
+    const togglePlay = useCallback(() => dispatch({ type: 'SET_PLAYING', payload: !state.isPlaying }), [dispatch, state.isPlaying]);
+    const next = useCallback(() => dispatch({ type: 'NEXT' }), [dispatch]);
+    const prev = useCallback(() => dispatch({ type: 'PREV' }), [dispatch]);
+
+    const seekTo = useCallback((seconds) => {
+        if (playerRef.current && playerRef.current.seekTo) {
+            playerRef.current.seekTo(seconds, true);
+            dispatch({ type: 'UPDATE_TIME', payload: seconds });
+        }
+    }, [dispatch]);
+
+    const getDuration = useCallback(() => {
+        if (playerRef.current && playerRef.current.getDuration) {
+            try {
+                return playerRef.current.getDuration() || 0;
+            } catch {
+                return 0;
+            }
+        }
+        return 0;
+    }, []);
+
+    const getCurrentTime = useCallback(() => {
+        if (playerRef.current && playerRef.current.getCurrentTime) {
+            try {
+                return playerRef.current.getCurrentTime() || 0;
+            } catch {
+                return 0;
+            }
+        }
+        return 0;
+    }, []);
+
+    return {
+        play,
+        pause,
+        togglePlay,
+        next,
+        prev,
+        seekTo,
+        getDuration,
+        getCurrentTime,
+        currentTrack,
+        isPlaying: state.isPlaying,
+        playerRef,
+    };
+}
