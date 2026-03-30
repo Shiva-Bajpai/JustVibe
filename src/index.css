@@ -28,6 +28,9 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
+
+  /* Optimized Background Placeholder (112B tiny image) */
+  --bg-placeholder: url('data:image/webp;base64,UklGRmgAAABXRUJQVlA4IFwAAACwBACdASoUABQAP3Gqyl20rCgkqAqqkC4JQBfJAh6kQOt1Hb/YHcbK5Uv9Sb/gAP0MWa1QvBATINCYv0IVwoNNRd5rI/o/1p+1+Bd1TuPsUw4bXLi6MRPBkAAAAA==');
 }
 
 /* ---------- Reset ---------- */
@@ -85,11 +88,21 @@ input {
 .landing-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/BG.png');
+  background-image: var(--bg-placeholder);
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
   z-index: 0;
+  filter: blur(40px);
+  transform: scale(1.1);
+  transition: filter 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 1.2s ease;
+  will-change: filter, transform;
+}
+
+.landing-bg.loaded {
+  background-image: url('/BG.webp');
+  filter: blur(0);
+  transform: scale(1);
   animation: bgZoom 40s ease-in-out infinite alternate;
 }
 
@@ -660,12 +673,20 @@ input {
 .dash-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/BG.png');
+  background-image: var(--bg-placeholder);
   background-size: cover;
   background-position: center;
+  filter: blur(50px) brightness(0.45) saturate(1.3);
+  transform: scale(1.1);
+  transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  will-change: filter, transform;
+}
+
+.dash-bg.loaded {
+  background-image: url('/BG.webp');
   filter: blur(12px) brightness(0.45) saturate(1.3);
   transform: scale(1.05);
-  z-index: 0;
 }
 
 .dash-overlay {

@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useAppState } from '../hooks/useAppState';
 import { useYouTubePlayer } from '../hooks/useYouTubePlayer';
 import { useMediaSession } from '../hooks/useMediaSession';
+import { useImageLoader } from '../hooks/useImageLoader';
 import { extractVideoId, extractPlaylistId, fetchVideoInfo } from '../utils/youtubeUtils';
 import VideoModal from './VideoModal';
 
@@ -219,7 +220,7 @@ export default function Dashboard({ onBack }) {
     };
 
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-    const items = state.playlist.map((t, i) => t.id + '-' + i);
+    const isBgLoaded = useImageLoader('/BG.webp');
 
     return (
         <motion.div
@@ -229,7 +230,7 @@ export default function Dashboard({ onBack }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
         >
-            <div className="dash-bg" />
+            <div className={`dash-bg ${isBgLoaded ? 'loaded' : ''}`} />
             <div className="dash-overlay" />
 
             {/* Pull-to-refresh indicator */}

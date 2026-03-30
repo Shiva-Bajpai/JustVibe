@@ -1,6 +1,7 @@
 import { useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+import { useImageLoader } from '../hooks/useImageLoader';
 
 export default function LandingPage({ onEnter }) {
     const [exiting, setExiting] = useState(false);
@@ -10,6 +11,8 @@ export default function LandingPage({ onEnter }) {
         setTimeout(onEnter, 1000);
     };
 
+    const isBgLoaded = useImageLoader('/BG.webp');
+
     return (
         <motion.div
             className="landing-page"
@@ -18,7 +21,7 @@ export default function LandingPage({ onEnter }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
         >
-            <div className="landing-bg" />
+            <div className={`landing-bg ${isBgLoaded ? 'loaded' : ''}`} />
             <div className="landing-overlay" />
 
             {/* Brand top-left */}
