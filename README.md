@@ -34,10 +34,10 @@ They push visuals, autoplay videos, and intrusive ads that break the flow of lis
 This project challenges that paradigm.
 
 It is built for:
-- 🌙 **Late-night listeners** who just want peace
-- 💻 **Developers and creators** who need a focused environment
-- 🎧 **Audiophiles** who value simplicity over noise
-- 🕊️ **Anyone** tired of being distracted while listening to what they love
+- **Late-night listeners** who just want peace
+- **Developers and creators** who need a focused environment
+- **Audiophiles** who value simplicity over noise
+- **Anyone** tired of being distracted while listening to what they love
 
 ### Core Philosophy
 
@@ -50,12 +50,12 @@ It is built for:
 
 ## ✨ Key Features
 
-- **🚫 Zero Ads, Zero Distractions**: A clean, minimal interface focused purely on a completely ad-free audio streaming experience.
-- **🎧 Audio-Only Streaming**: Seamless background listening. Saves tremendous internet bandwidth by extracting and playing only the audio stream.
-- **🔍 Smart Search & Playlists**: YouTube-powered search and seamless playlist integration. Instantly search or paste an existing YouTube playlist URL.
-- **📱 PWA & Offline Ready**: Fully installable Progressive Web App (PWA) optimized for long listening sessions and deep work.
-- **✨ Fluid UI & Animations**: Built with Framer Motion for buttery-smooth transitions and a highly reactive interface with no unnecessary UI clutter.
-- **🗂️ Drag & Drop Queue**: Intuitively reorder your playlist queue using robust drag-and-drop mechanics.
+- **Zero Ads, Zero Distractions**: A clean, minimal interface focused purely on a completely ad-free audio streaming experience.
+- ** Audio-Only Streaming**: Seamless background listening. Saves tremendous internet bandwidth by extracting and playing only the audio stream.
+- **Smart Search & Playlists**: YouTube-powered search and seamless playlist integration. Instantly search or paste an existing YouTube playlist URL.
+- **PWA & Offline Ready**: Fully installable Progressive Web App (PWA) optimized for long listening sessions and deep work.
+- **Fluid UI & Animations**: Built with Framer Motion for buttery-smooth transitions and a highly reactive interface with no unnecessary UI clutter.
+- **Drag & Drop Queue**: Intuitively reorder your playlist queue using robust drag-and-drop mechanics.
 
 ### Vision
 
